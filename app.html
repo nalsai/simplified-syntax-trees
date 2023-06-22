@@ -17,9 +17,6 @@
         }
 
         .phrase {
-            font-family: meiryo, sans-serif;
-            font-size: 1.5em;
-            text-anchor: middle;
             cursor: pointer;
         }
     
@@ -28,8 +25,7 @@
         }
     </style>
     <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/3.0.9/umd.js" integrity="sha512-Wu9XXg78PiNE0DI4Z80lFKlEpLq7yGjquc0I35Nz+sYmSs4/oNHaSW8ACStXBoXciqwTLnSINqToeWP3iNDGmQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="https://sharonchoong.github.io/svg-exportJS/svg-export.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvg/dist/browser/canvg.min.js"></script>
 </head>
 
 <body>
@@ -227,9 +223,10 @@
 
         // create svg
         var svg = d3.select("body").append("svg")
+            .attr("xmlns", "http://www.w3.org/2000/svg")
             .attr("id", "visualization")
             .call(zoom)
-            .on("dblclick.zoom", null)  
+            .on("dblclick.zoom", null)
             .append("g");
 
         // drag handlers
@@ -244,14 +241,17 @@
             .enter()
             .append("text")
             .attr("x", function (d, i) { return snap_size * 2 + i * snap_size * 4; })
-            .attr("y", snap_size * 2)
+            .attr("y", snap_size)
             .attr("id", function (d, i) { return "n" + i; })
             .text(function (d, i) { return d; })
             .attr("class", "phrase")
             .call(drag)
             .on("mouseover", handle_mouseover)
             .on("mouseout", handle_mouseout)
-            .on("click", handle_click);
+            .on("click", handle_click)
+            .attr("font-family", "sans-serif")
+            .attr("font-size", "1.5em")
+            .attr("text-anchor", "middle");
 
         // create connection lines
         svg.selectAll("line")
@@ -318,35 +318,111 @@
             }
         }
         console.log("min_x: " + min_x);
-        var move_x = min_x - snap_size * 4;
+        var move_x = min_x - snap_size * 2;
         svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - move_x; });
         svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - move_x; })
-                             .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - move_x; });
-        
-
-        // TODO: move elements in g to the left
-
-        // TODO: fix centering
-        /*
-        zoom.translateTo(svg, parseInt(d3.select("g").node().getBBox().width) / 2, 0, [parseInt(window.innerWidth) / 2,0])
-        zoom.transform(svg, d3.zoomIdentity.translate(
-            parseInt(window.innerWidth) / 2,
-            0
-        ));
-        */
+                             .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - move_x; });    // TODO: fix NaN for not set lines
 
         // TODO:
         // 山田さんは:5-2+2 今田さんが:3 三年前に:3 やめた:4 会社に:5 つとめています
         // should move 山田さんは x-2*snap y+2*snap
 
-        // TODO: make exports nice (position, size, font)
         function downloadSvg() {
-            svgExport.downloadSvg(document.getElementById("visualization"), "export", {
-                useCSS: false,
-            });
+            // move all elements
+            var min_x = 9000;
+            var min_y = 9000;
+            for (let i = 0;i < dataset.length;i++) {
+                if (parseInt(d3.select("text#n" + i).attr("x")) < min_x) {
+                    min_x = parseInt(d3.select("text#n" + i).attr("x"));
+                }
+                if (parseInt(d3.select("text#n" + i).attr("y")) < min_y) {
+                    min_y = parseInt(d3.select("text#n" + i).attr("y"));
+                }
+            }
+            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - min_x + 2 * snap_size; });
+            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - min_x + 2 * snap_size; })
+                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - min_x + 2 * snap_size; });
+                        
+            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) - min_y + snap_size; });
+            svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) - min_y + snap_size; })
+                                 .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) - min_y + snap_size; });
+
+            // set svg size
+            d3.select("svg").attr("width", d3.select("g").node().getBBox().width + snap_size)
+                            .attr("height", d3.select("g").node().getBBox().height + snap_size);
+            
+            // save transform and remove it for export
+            var transform = svg.attr("transform");
+            svg.attr("transform", null);
+
+            const svgElement = document.getElementById('visualization');
+            var preface = '<?xml version="1.0" encoding="UTF-8"?>\r\n';
+            var svgBlob = new Blob([preface, svgElement.outerHTML], {type:"image/svg+xml;charset=utf-8"});
+    
+            var dataUrl = URL.createObjectURL(svgBlob);
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'export.svg';
+            link.click();
+
+            // reapply transform
+            svg.attr("transform", transform);
         }
+
         function downloadPng() {
-            svgExport.downloadPng(document.getElementById("visualization"), "export", {});
+            // move all elements to positive values
+            var min_x = 9000;
+            var min_y = 9000;
+            for (let i = 0;i < dataset.length;i++) {
+                if (parseInt(d3.select("text#n" + i).attr("x")) < min_x) {
+                    min_x = parseInt(d3.select("text#n" + i).attr("x"));
+                }
+                if (parseInt(d3.select("text#n" + i).attr("y")) < min_y) {
+                    min_y = parseInt(d3.select("text#n" + i).attr("y"));
+                }
+            }
+            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - min_x + 2 * snap_size; });
+            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - min_x + 2 * snap_size; })
+                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - min_x + 2 * snap_size; });
+                        
+            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) - min_y + snap_size; });
+            svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) - min_y + snap_size; })
+                                 .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) - min_y + snap_size; });
+
+            // set svg size
+            d3.select("svg").attr("width", d3.select("g").node().getBBox().width + snap_size)
+                            .attr("height", d3.select("g").node().getBBox().height + snap_size);
+
+            // save transform and remove it for export
+            var transform = svg.attr("transform");
+            svg.attr("transform", null);
+
+            const scaleFactor = 6;
+            const svgElement = document.getElementById('visualization');
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = (d3.select("g").node().getBBox().width + 2 * snap_size) * scaleFactor;
+            canvas.height = (d3.select("g").node().getBBox().height + 2 * snap_size) * scaleFactor;
+
+            // Convert the SVG to canvas
+            ctx.scale(scaleFactor, scaleFactor);
+            canvg(canvas, svgElement.outerHTML);
+
+            // Set the canvas background color to white
+            ctx.globalCompositeOperation = 'destination-over'
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = 'export.png';
+            link.click();
+
+            // reapply transform
+            svg.attr("transform", transform);
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
