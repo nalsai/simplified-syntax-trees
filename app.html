@@ -278,14 +278,16 @@
                         nth_child++;
                     }
                 }
+                console.log(j_split[0] + " is child " + this_child + "/" + nth_child);
+                var movement = (snap_size * 4) * -(this_child+1 - nth_child);
 
                 // calculate movement of children for recursive movement (before moving the phrase)
-                var move_x = -(parseInt(d3.select("text#n" + j).attr("x")) - parseInt(d3.select("text#n" + parent_id).attr("x")) + (snap_size * 4) * this_child);
+                var move_x = -(parseInt(d3.select("text#n" + j).attr("x")) - parseInt(d3.select("text#n" + parent_id).attr("x")) + movement);
                 var move_y =  parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2 -parseInt(d3.select("text#n" + j).attr("y"));
 
                 // move phrase
                 d3.select("text#n" + j)
-                    .attr("x", parseInt(d3.select("text#n" + parent_id).attr("x")) - (snap_size * 4) * this_child)
+                    .attr("x", parseInt(d3.select("text#n" + parent_id).attr("x")) - movement)
                     .attr("y", parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2);
 
                 // move connection line
@@ -303,15 +305,39 @@
 
                 // remove : from text
                 d3.select("text#n" + j).text(d3.select("text#n" + j).text().split(":")[0]);
+
             }
         }
+        // move all phrases to the left by min_x
+
+        // get x of phrase with lowest x
+        var min_x = 9000;
+        for (let i = 0;i < dataset.length;i++) {
+            if (parseInt(d3.select("text#n" + i).attr("x")) < min_x) {
+                min_x = parseInt(d3.select("text#n" + i).attr("x"));
+            }
+        }
+        console.log("min_x: " + min_x);
+        var move_x = min_x - snap_size * 4;
+        svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - move_x; });
+        svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - move_x; })
+                             .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - move_x; });
+        
+
+        // TODO: move elements in g to the left
 
         // TODO: fix centering
-        //zoom.translateTo(svg, parseInt(d3.select("g").node().getBBox().width) / 2, 0, [parseInt(window.innerWidth) / 2,0])
+        /*
+        zoom.translateTo(svg, parseInt(d3.select("g").node().getBBox().width) / 2, 0, [parseInt(window.innerWidth) / 2,0])
         zoom.transform(svg, d3.zoomIdentity.translate(
             parseInt(window.innerWidth) / 2,
             0
         ));
+        */
+
+        // TODO:
+        // 山田さんは:5-2+2 今田さんが:3 三年前に:3 やめた:4 会社に:5 つとめています
+        // should move 山田さんは x-2*snap y+2*snap
 
         // TODO: make exports nice (position, size, font)
         function downloadSvg() {
