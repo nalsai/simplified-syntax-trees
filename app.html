@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Simplified Syntax Trees</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <style>
+        body {
+            overflow: hidden;
+        }
+
+        #visualization {
+            width: 100%;
+            height: calc(100vh - 100px);
+        }
+
+        .phrase {
+            font-family: meiryo, sans-serif;
+            font-size: 1.5em;
+            text-anchor: middle;
+            cursor: pointer;
+        }
+    
+        .c-pointer {
+            cursor: pointer;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvg/3.0.9/umd.js" integrity="sha512-Wu9XXg78PiNE0DI4Z80lFKlEpLq7yGjquc0I35Nz+sYmSs4/oNHaSW8ACStXBoXciqwTLnSINqToeWP3iNDGmQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://sharonchoong.github.io/svg-exportJS/svg-export.min.js"></script>
+</head>
+
+<body>
+    <form class="m-2" id="input_form" method="get">
+        <div class="input-group">
+            <input type="text" class="form-control" id="input_text" name="i" type="text" placeholder="Syntax Tree Input"
+                aria-label="Syntax Tree Input">
+            <button class="btn btn-outline-secondary" type="submit" id="button-addon2">Submit</button>
+        </div>
+    </form>
+
+    <div class="dropdown m-2">
+        <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            Export
+        </button>
+        <ul class="dropdown-menu">
+            <li><a class="dropdown-item c-pointer" onclick="downloadSvg()">Export as SVG</a></li>
+            <li><a class="dropdown-item c-pointer" onclick="downloadPng()">Export as PNG</a></li>
+        </ul>
+    </div>
+
+    <script>
+        // enable undo and redo through browser history
+        window.onpopstate = function(e) {
+            if (!e.state.navigation) {
+                return;  // on safari popstate gets fired on page load
+            }
+            window.location = location.href;
+        };
+
+        var input_text = new URLSearchParams(window.location.search).get('i');
+        if (input_text == null) {input_text = "";}
+        input_text = input_text.replace(/　/g, " ");
+        input_text = input_text.replace(/ +/g, " ");
+        input_text = input_text.trim();
+        document.forms['input_form']['input_text'].value = input_text;
+        var dataset = input_text.split(" ");
+
+        const line_draw_offset = 24 // draw the line above the text, should be >= font-size
+        const snap_size = 40
+
+        // initialize variables
+        var selected = 0;
+        var selected_id = 0;
+        var drag_start_x = 0;
+        var drag_start_y = 0;
+        var drag_end_x = 0;
+        var drag_end_y = 0;
+        var drag_distance_x = 0;
+        var drag_distance_y = 0;
+        var connections = {};
+        for (var i = 0; i <= dataset.length; i++) {
+            connections["n" + i] = new Array();
+        }
+
+        function handle_mouseover(d) {
+            d3.select(this).attr("font-weight", "bolder");
+        }
+
+        function handle_mouseout(d) {
+            d3.select(this).attr("font-weight", "normal");
+        }
+
+        function handle_click(d) {
+            // select first phrase, remove connection line and return
+            if (selected == 0) {
+                selected = 1
+                selected_id = d3.select(this).attr("id");
+
+                d3.select(this).attr("fill", "red")
+
+                svg.select("line#" + selected_id).attr("stroke", "none")
+                for (var i=0; i<=dataset.length; i++){
+                    if (connections["n" + i].includes(selected_id) == true) {
+                        connections["n" + i] = connections["n" + i].filter(item => item !== selected_id);
+                    }
+                }
+
+                dataset[selected_id.slice(1)] = dataset[selected_id.slice(1)].split(":")[0];
+
+                // update input text form
+                document.forms['input_form']['input_text'].value = dataset.join(" ");
+                // don't update url to not clutter history
+                //window.history.pushState({ navigation: true }, '', '/app.html?i=' + dataset.join(" "));
+                return;
+            }
+
+            // deselect and return if same phrase is selected again
+            if (d3.select(this).attr("id") == selected_id) {
+                selected = 0
+                svg.select("text#" + selected_id).attr("fill", "black");
+                return;
+            }
+
+            // create connection line if different phrase is selected
+            svg.select("line#" + selected_id)
+                .attr("x2", d3.select(this).attr("x"))
+                .attr("y2", parseInt(d3.select(this).attr("y")) + parseInt(line_draw_offset / 3))
+                .attr("stroke", "black")
+            selected = 0
+            connections[d3.select(this).attr("id")].push(selected_id);
+            svg.select("text#" + selected_id)
+                .attr("fill", "black");
+
+            // remove : on deselect
+            var child_id = selected_id.slice(1);
+            var parent_id = d3.select(this).attr("id").slice(1);
+            dataset[child_id] = dataset[child_id] + ":" + parent_id;
+            console.log(dataset.join(' '));
+
+            // update input text form and url
+            document.forms['input_form']['input_text'].value = dataset.join(" ");
+            window.history.pushState({ navigation: true }, '', '/app.html?i=' + dataset.join(" "));
+        }
+
+        function drag_started(d) {
+            d3.event.sourceEvent.stopPropagation();
+
+            drag_distance_x = d3.select(this).attr("x") - d3.event.x;
+            drag_distance_y = d3.select(this).attr("y") - d3.event.y;
+
+            // for recursive movement
+            drag_start_x = d3.select(this).attr("x");
+            drag_start_y = d3.select(this).attr("y");
+        }
+
+        function drag_move(d) {
+            // move text
+            d3.select(this)
+                .attr("x", d3.event.x + drag_distance_x)
+                .attr("y", d3.event.y + drag_distance_y)
+                .raise();
+
+            // move connection line
+            svg.select("line#" + d3.select(this).attr("id"))
+                .attr("x1", d3.select(this).attr("x"))
+                .attr("y1", d3.select(this).attr("y") - line_draw_offset);
+
+            // move connected lines of connected phrases
+            for (var i = 0; i <= connections[d3.select(this).attr("id")].length; i++) {
+                svg.select("line#" + connections[d3.select(this).attr("id")][i])
+                    .attr("x2", (d3.event.x + drag_distance_x))
+                    .attr("y2", parseInt(d3.select(this).attr("y")) + parseInt(line_draw_offset / 3));
+            }
+        }
+
+        function drag_ended(d) {
+            d3.select(this)
+                .attr("x", Math.round((d3.event.x + drag_distance_x) / snap_size) * snap_size)
+                .attr("y", Math.round((d3.event.y + drag_distance_y) / snap_size) * snap_size)
+
+            // move connection line
+            svg.select("line#" + d3.select(this).attr("id"))
+                .attr("x1", d3.select(this).attr("x"))
+                .attr("y1", d3.select(this).attr("y") - line_draw_offset);
+
+            // move connected lines of connected phrases
+            for (var b = 0; b <= connections[d3.select(this).attr("id")].length; b++) {
+                svg.select("line#" + connections[d3.select(this).attr("id")][b])
+                    .attr("x2", d3.select(this).attr("x"))
+                    .attr("y2", parseInt(d3.select(this).attr("y")) + parseInt(line_draw_offset / 3));
+            }
+
+            // recursive movement
+            drag_end_x = d3.select(this).attr("x");
+            drag_end_y = d3.select(this).attr("y");
+
+            if (d3.event.sourceEvent.altKey) {
+                move_recursively(d3.select(this), parseInt(drag_end_x) - parseInt(drag_start_x), parseInt(drag_end_y) - parseInt(drag_start_y));
+            }
+        }
+
+        function move_recursively(phrase, x, y) {
+            for (var b = 0; b < connections[phrase.attr("id")].length; b++) {
+                var subphrase = "text#" + connections[phrase.attr("id")][b];
+                var subphrase_x_moved = parseInt(d3.select(subphrase).attr("x")) + x;
+                var subphrase_y_moved = parseInt(d3.select(subphrase).attr("y")) + y;
+                d3.select(subphrase)
+                    .attr("x", subphrase_x_moved)
+                    .attr("y", subphrase_y_moved);
+                d3.select("line#" + connections[phrase.attr("id")][b])
+                    .attr("x1", subphrase_x_moved)
+                    .attr("y1", subphrase_y_moved - parseInt(line_draw_offset))
+                    .attr("x2", parseInt(phrase.attr("x")))
+                    .attr("y2", parseInt(phrase.attr("y")) + parseInt(line_draw_offset / 3));
+                move_recursively(d3.select(subphrase), x, y);
+            }
+        }
+
+        var zoom = d3.zoom()
+            .scaleExtent([0.5, 4])
+            .on("zoom", function () {
+                svg.attr("transform", d3.event.transform)
+            });
+
+        // create svg
+        var svg = d3.select("body").append("svg")
+            .attr("id", "visualization")
+            .call(zoom)
+            .on("dblclick.zoom", null)  
+            .append("g");
+
+        // drag handlers
+        var drag = d3.drag()
+            .on("start", drag_started)
+            .on("drag", drag_move)
+            .on("end", drag_ended);
+
+        // create phrases
+        svg.selectAll("text")
+            .data(dataset)
+            .enter()
+            .append("text")
+            .attr("x", function (d, i) { return snap_size * 2 + i * snap_size * 4; })
+            .attr("y", snap_size * 2)
+            .attr("id", function (d, i) { return "n" + i; })
+            .text(function (d, i) { return d; })
+            .attr("class", "phrase")
+            .call(drag)
+            .on("mouseover", handle_mouseover)
+            .on("mouseout", handle_mouseout)
+            .on("click", handle_click);
+
+        // create connection lines
+        svg.selectAll("line")
+            .data(dataset)
+            .enter()
+            .append("line")
+            .attr("stroke-width", 2)
+            .attr("id", function (d, i) { return "n" + i; });
+
+        // iterate over dataset and connect phrases to their parents
+        for (let j = 0;j < dataset.length;j++) {
+            var j_split = dataset[j].split(":")
+            var parent_id = j_split[j_split.length-1]
+
+            if(parseInt(parent_id) || parent_id == "0"){
+                // place child below parent
+
+                // count number of children of same parent
+                var nth_child = 0;
+                var this_child = 0;
+                for (let i = 0;i < dataset.length;i++) {
+                    if (i == j ) {this_child = nth_child;}
+                    if (dataset[i].split(":")[dataset[i].split(":").length-1] == parent_id) {
+                        nth_child++;
+                    }
+                }
+
+                // calculate movement of children for recursive movement (before moving the phrase)
+                var move_x = -(parseInt(d3.select("text#n" + j).attr("x")) - parseInt(d3.select("text#n" + parent_id).attr("x")) + (snap_size * 4) * this_child);
+                var move_y =  parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2 -parseInt(d3.select("text#n" + j).attr("y"));
+
+                // move phrase
+                d3.select("text#n" + j)
+                    .attr("x", parseInt(d3.select("text#n" + parent_id).attr("x")) - (snap_size * 4) * this_child)
+                    .attr("y", parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2);
+
+                // move connection line
+                svg.select("line#n" + j)
+                    .attr("x1", d3.select("text#n" + j).attr("x"))
+                    .attr("y1", parseInt(d3.select("text#n" + j).attr("y")) - line_draw_offset)
+                    .attr("x2", d3.select("text#n" + parent_id).attr("x"))
+                    .attr("y2", parseInt(d3.select("text#n" + parent_id).attr("y")) + parseInt(line_draw_offset / 3))
+                    .attr("stroke", "blue");
+
+                connections[d3.select("text#n" + parent_id).attr("id")].push("n"+j);
+
+                // move children recursively
+                move_recursively(d3.select("text#n" + j), move_x, move_y);
+
+                // remove : from text
+                d3.select("text#n" + j).text(d3.select("text#n" + j).text().split(":")[0]);
+            }
+        }
+
+        // TODO: fix centering
+        //zoom.translateTo(svg, parseInt(d3.select("g").node().getBBox().width) / 2, 0, [parseInt(window.innerWidth) / 2,0])
+        zoom.transform(svg, d3.zoomIdentity.translate(
+            parseInt(window.innerWidth) / 2,
+            0
+        ));
+
+        // TODO: make exports nice (position, size, font)
+        function downloadSvg() {
+            svgExport.downloadSvg(document.getElementById("visualization"), "export", {
+                useCSS: false,
+            });
+        }
+        function downloadPng() {
+            svgExport.downloadPng(document.getElementById("visualization"), "export", {});
+        }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+</body>
+
+</html>
