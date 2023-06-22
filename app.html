@@ -390,8 +390,8 @@
                                  .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) - min_y + snap_size; });
 
             // set svg size
-            d3.select("svg").attr("width", d3.select("g").node().getBBox().width + snap_size)
-                            .attr("height", d3.select("g").node().getBBox().height + snap_size);
+            d3.select("svg").attr("width", null)
+                            .attr("height", null);
 
             // save transform and remove it for export
             var transform = svg.attr("transform");
@@ -403,8 +403,8 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            canvas.width = (d3.select("g").node().getBBox().width + 2 * snap_size) * scaleFactor;
-            canvas.height = (d3.select("g").node().getBBox().height + 2 * snap_size) * scaleFactor;
+            canvas.width = (d3.select("g").node().getBBox().width + snap_size) * scaleFactor;
+            canvas.height = (d3.select("g").node().getBBox().height + snap_size) * scaleFactor;
 
             // Convert the SVG to canvas
             ctx.scale(scaleFactor, scaleFactor);
