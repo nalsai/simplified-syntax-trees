@@ -106,10 +106,9 @@
 
                 dataset[selected_id.slice(1)] = dataset[selected_id.slice(1)].split(":")[0];
 
-                // update input text form
+                // update input text form and url
                 document.forms['input_form']['input_text'].value = dataset.join(" ");
-                // don't update url to not clutter history
-                //window.history.pushState({ navigation: true }, '', '/app.html?i=' + dataset.join(" "));
+                window.history.pushState({ navigation: true }, '', '/app.html?i=' + dataset.join(" "));
                 return;
             }
 
