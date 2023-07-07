@@ -255,8 +255,8 @@
             .on("mouseout", handle_mouseout)
             .on("click", handle_click)
             .attr("font-family", "sans-serif")
-            .attr("font-size", "1.5em")
-            .attr("text-anchor", "middle");
+            .attr("font-size", "24px")
+            .attr("text-anchor", "middle"); 
 
         // create connection lines
         svg.selectAll("line")
@@ -357,10 +357,6 @@
             // save transform and remove it
             export_transform = svg.attr("transform");
             svg.attr("transform", null);
-
-            // set svg size
-            d3.select("svg").attr("width", d3.select("g").node().getBBox().width + snap_size)
-                            .attr("height", d3.select("g").node().getBBox().height + snap_size);
         }
 
         function restoreAfterExport() {
@@ -383,6 +379,8 @@
 
         function downloadSvg() {
             prepareExport();
+            d3.select("svg").attr("width", d3.select("g").node().getBBox().width + snap_size)
+                            .attr("height", d3.select("g").node().getBBox().height + snap_size);
             const svgElement = document.getElementById('visualization');
             let preface = '<?xml version="1.0" encoding="UTF-8"?>\r\n';
             let svgBlob = new Blob([preface, svgElement.outerHTML], {type:"image/svg+xml;charset=utf-8"});
@@ -397,6 +395,8 @@
 
         function downloadPng() {
             prepareExport();
+            d3.select("svg").attr("width", null)
+                            .attr("height", null);
             const scaleFactor = 6;
             const svgElement = document.getElementById('visualization');
 
