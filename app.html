@@ -48,6 +48,11 @@
     </div>
 
     <script>
+        // TODO: move to left if overlapping (including parents connect straight to it)
+        // - Example: https://syntax.nalsai.de/app.html?i=%E4%BA%8C%E5%8D%81%E6%89%8D%E3%81%AB%3A1+%E3%81%AA%E3%81%A3%E3%81%9F%3A2+%E7%94%B7%E5%AD%90%E3%81%AF%3A4+%E8%80%85%E4%BD%93%E6%A4%9C%E6%9F%BB%E3%82%92%3A4+%E6%B5%AE%E3%81%91%E3%80%81%3A12+%E5%90%88%E6%A0%BC%3A6+%E3%81%97%E3%81%9F%3A7+%E3%82%82%E3%81%AE%E3%81%AF%3A12+%E4%B8%89%E5%B9%B4%E9%96%93%E3%80%81%3A10+%E8%BB%8D%E9%9A%8A%E3%81%AB%3A10+%E3%81%AF%E3%81%84%E3%82%8B%3A11+%E3%81%93%E3%81%A8%E3%81%8C%3A12+%E7%BE%A9%E5%8B%99%E3%81%A5%E3%81%91%E3%82%89%E3%82%8C%E3%81%BE%E3%81%97%E3%81%9F%E3%80%82
+        // - 山田さんは:5-2+2 今田さんが:3 三年前に:3 やめた:4 会社に:5 つとめています
+        //      should move 山田さんは x-2*snap y+2*snap
+
         // enable undo and redo through browser history
         window.onpopstate = function(e) {
             if (!e.state.navigation) {
@@ -56,28 +61,29 @@
             window.location = location.href;
         };
 
-        var input_text = new URLSearchParams(window.location.search).get('i');
+        // parse input
+        let input_text = new URLSearchParams(window.location.search).get('i');
         if (input_text == null) {input_text = "";}
         input_text = input_text.replace(/　/g, " ");
         input_text = input_text.replace(/ +/g, " ");
         input_text = input_text.trim();
         document.forms['input_form']['input_text'].value = input_text;
-        var dataset = input_text.split(" ");
+        let dataset = input_text.split(" ");
 
         const line_draw_offset = 24 // draw the line above the text, should be >= font-size
         const snap_size = 40
 
         // initialize variables
-        var selected = 0;
-        var selected_id = 0;
-        var drag_start_x = 0;
-        var drag_start_y = 0;
-        var drag_end_x = 0;
-        var drag_end_y = 0;
-        var drag_distance_x = 0;
-        var drag_distance_y = 0;
-        var connections = {};
-        for (var i = 0; i <= dataset.length; i++) {
+        let selected = 0;
+        let selected_id = 0;
+        let drag_start_x = 0;
+        let drag_start_y = 0;
+        let drag_end_x = 0;
+        let drag_end_y = 0;
+        let drag_distance_x = 0;
+        let drag_distance_y = 0;
+        let connections = {};
+        for (let i = 0; i <= dataset.length; i++) {
             connections["n" + i] = new Array();
         }
 
@@ -98,7 +104,7 @@
                 d3.select(this).attr("fill", "red")
 
                 svg.select("line#" + selected_id).attr("stroke", "none")
-                for (var i=0; i<=dataset.length; i++){
+                for (let i=0; i<=dataset.length; i++){
                     if (connections["n" + i].includes(selected_id) == true) {
                         connections["n" + i] = connections["n" + i].filter(item => item !== selected_id);
                     }
@@ -130,8 +136,8 @@
                 .attr("fill", "black");
 
             // remove : on deselect
-            var child_id = selected_id.slice(1);
-            var parent_id = d3.select(this).attr("id").slice(1);
+            let child_id = selected_id.slice(1);
+            let parent_id = d3.select(this).attr("id").slice(1);
             dataset[child_id] = dataset[child_id] + ":" + parent_id;
             console.log(dataset.join(' '));
 
@@ -164,7 +170,7 @@
                 .attr("y1", d3.select(this).attr("y") - line_draw_offset);
 
             // move connected lines of connected phrases
-            for (var i = 0; i <= connections[d3.select(this).attr("id")].length; i++) {
+            for (let i = 0; i <= connections[d3.select(this).attr("id")].length; i++) {
                 svg.select("line#" + connections[d3.select(this).attr("id")][i])
                     .attr("x2", (d3.event.x + drag_distance_x))
                     .attr("y2", parseInt(d3.select(this).attr("y")) + parseInt(line_draw_offset / 3));
@@ -182,7 +188,7 @@
                 .attr("y1", d3.select(this).attr("y") - line_draw_offset);
 
             // move connected lines of connected phrases
-            for (var b = 0; b <= connections[d3.select(this).attr("id")].length; b++) {
+            for (let b = 0; b <= connections[d3.select(this).attr("id")].length; b++) {
                 svg.select("line#" + connections[d3.select(this).attr("id")][b])
                     .attr("x2", d3.select(this).attr("x"))
                     .attr("y2", parseInt(d3.select(this).attr("y")) + parseInt(line_draw_offset / 3));
@@ -198,10 +204,10 @@
         }
 
         function move_recursively(phrase, x, y) {
-            for (var b = 0; b < connections[phrase.attr("id")].length; b++) {
-                var subphrase = "text#" + connections[phrase.attr("id")][b];
-                var subphrase_x_moved = parseInt(d3.select(subphrase).attr("x")) + x;
-                var subphrase_y_moved = parseInt(d3.select(subphrase).attr("y")) + y;
+            for (let b = 0; b < connections[phrase.attr("id")].length; b++) {
+                let subphrase = "text#" + connections[phrase.attr("id")][b];
+                let subphrase_x_moved = parseInt(d3.select(subphrase).attr("x")) + x;
+                let subphrase_y_moved = parseInt(d3.select(subphrase).attr("y")) + y;
                 d3.select(subphrase)
                     .attr("x", subphrase_x_moved)
                     .attr("y", subphrase_y_moved);
@@ -214,14 +220,14 @@
             }
         }
 
-        var zoom = d3.zoom()
+        let zoom = d3.zoom()
             .scaleExtent([0.5, 4])
             .on("zoom", function () {
                 svg.attr("transform", d3.event.transform)
             });
 
         // create svg
-        var svg = d3.select("body").append("svg")
+        let svg = d3.select("body").append("svg")
             .attr("xmlns", "http://www.w3.org/2000/svg")
             .attr("id", "visualization")
             .call(zoom)
@@ -229,7 +235,7 @@
             .append("g");
 
         // drag handlers
-        var drag = d3.drag()
+        let drag = d3.drag()
             .on("start", drag_started)
             .on("drag", drag_move)
             .on("end", drag_ended);
@@ -260,142 +266,137 @@
             .attr("stroke-width", 2)
             .attr("id", function (d, i) { return "n" + i; });
 
-        // iterate over dataset and connect phrases to their parents
-        for (let j = 0;j < dataset.length;j++) {
-            var j_split = dataset[j].split(":")
-            var parent_id = j_split[j_split.length-1]
+        // connect and move phrases appropriately
+        {
+            // iterate over dataset and connect phrases to their parents
+            for (let j = 0;j < dataset.length;j++) {
+                let j_split = dataset[j].split(":")
+                let parent_id = j_split[j_split.length-1]
 
-            if(parseInt(parent_id) || parent_id == "0"){
-                // place child below parent
+                if(parseInt(parent_id) || parent_id == "0"){
+                    // place child below parent
 
-                // count number of children of same parent
-                var nth_child = 0;
-                var this_child = 0;
+                    // count number of children of same parent
+                    let nth_child = 0;
+                    let this_child = 0;
+                    for (let i = 0;i < dataset.length;i++) {
+                        if (i == j ) {this_child = nth_child;}
+                        if (dataset[i].split(":")[dataset[i].split(":").length-1] == parent_id) {
+                            nth_child++;
+                        }
+                    }
+                    //console.log(j_split[0] + " is child " + this_child + "/" + nth_child);
+                    let movement = (snap_size * 4) * -(this_child+1 - nth_child);
+
+                    // calculate movement of children for recursive movement (before moving the phrase)
+                    let min_x = -(parseInt(d3.select("text#n" + j).attr("x")) - parseInt(d3.select("text#n" + parent_id).attr("x")) + movement);
+                    let move_y =  parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2 -parseInt(d3.select("text#n" + j).attr("y"));
+
+                    // move phrase
+                    d3.select("text#n" + j)
+                        .attr("x", parseInt(d3.select("text#n" + parent_id).attr("x")) - movement)
+                        .attr("y", parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2);
+
+                    // move connection line
+                    svg.select("line#n" + j)
+                        .attr("x1", d3.select("text#n" + j).attr("x"))
+                        .attr("y1", parseInt(d3.select("text#n" + j).attr("y")) - line_draw_offset)
+                        .attr("x2", d3.select("text#n" + parent_id).attr("x"))
+                        .attr("y2", parseInt(d3.select("text#n" + parent_id).attr("y")) + parseInt(line_draw_offset / 3))
+                        .attr("stroke", "blue");
+
+                    connections[d3.select("text#n" + parent_id).attr("id")].push("n"+j);
+
+                    // move children recursively
+                    move_recursively(d3.select("text#n" + j), min_x, move_y);
+
+                    // remove : from text
+                    d3.select("text#n" + j).text(d3.select("text#n" + j).text().split(":")[0]);
+                }
+            }
+
+            // move all phrases to the left by min_x (initial positioning)
+                let initial_min_x = 9000;
                 for (let i = 0;i < dataset.length;i++) {
-                    if (i == j ) {this_child = nth_child;}
-                    if (dataset[i].split(":")[dataset[i].split(":").length-1] == parent_id) {
-                        nth_child++;
+                    if (parseInt(d3.select("text#n" + i).attr("x")) < initial_min_x) {
+                        initial_min_x = parseInt(d3.select("text#n" + i).attr("x"));
                     }
                 }
-                console.log(j_split[0] + " is child " + this_child + "/" + nth_child);
-                var movement = (snap_size * 4) * -(this_child+1 - nth_child);
+                //console.log("min_x: " + initial_min_x);
 
-                // calculate movement of children for recursive movement (before moving the phrase)
-                var move_x = -(parseInt(d3.select("text#n" + j).attr("x")) - parseInt(d3.select("text#n" + parent_id).attr("x")) + movement);
-                var move_y =  parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2 -parseInt(d3.select("text#n" + j).attr("y"));
-
-                // move phrase
-                d3.select("text#n" + j)
-                    .attr("x", parseInt(d3.select("text#n" + parent_id).attr("x")) - movement)
-                    .attr("y", parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2);
-
-                // move connection line
-                svg.select("line#n" + j)
-                    .attr("x1", d3.select("text#n" + j).attr("x"))
-                    .attr("y1", parseInt(d3.select("text#n" + j).attr("y")) - line_draw_offset)
-                    .attr("x2", d3.select("text#n" + parent_id).attr("x"))
-                    .attr("y2", parseInt(d3.select("text#n" + parent_id).attr("y")) + parseInt(line_draw_offset / 3))
-                    .attr("stroke", "blue");
-
-                connections[d3.select("text#n" + parent_id).attr("id")].push("n"+j);
-
-                // move children recursively
-                move_recursively(d3.select("text#n" + j), move_x, move_y);
-
-                // remove : from text
-                d3.select("text#n" + j).text(d3.select("text#n" + j).text().split(":")[0]);
-
-            }
+                let initial_move_x = initial_min_x - snap_size * 2;
+                svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - initial_move_x; });
+                svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - initial_move_x; })
+                                    .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - initial_move_x; });    // TODO: fix NaN for not set lines
         }
-        // move all phrases to the left by min_x
 
-        // get x of phrase with lowest x
-        var min_x = 9000;
-        for (let i = 0;i < dataset.length;i++) {
-            if (parseInt(d3.select("text#n" + i).attr("x")) < min_x) {
-                min_x = parseInt(d3.select("text#n" + i).attr("x"));
-            }
-        }
-        console.log("min_x: " + min_x);
-        var move_x = min_x - snap_size * 2;
-        svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - move_x; });
-        svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - move_x; })
-                             .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - move_x; });    // TODO: fix NaN for not set lines
+        let export_min_x = Number.MAX_VALUE;
+        let export_min_y = Number.MAX_VALUE;
+        let export_transform = svg.attr("transform");
 
-        // TODO:
-        // 山田さんは:5-2+2 今田さんが:3 三年前に:3 やめた:4 会社に:5 つとめています
-        // should move 山田さんは x-2*snap y+2*snap
-
-        function downloadSvg() {
-            // move all elements
-            var min_x = 9000;
-            var min_y = 9000;
+        function prepareExport() {
+            // get movement values
             for (let i = 0;i < dataset.length;i++) {
-                if (parseInt(d3.select("text#n" + i).attr("x")) < min_x) {
-                    min_x = parseInt(d3.select("text#n" + i).attr("x"));
+                if (parseInt(d3.select("text#n" + i).attr("x")) < export_min_x) {
+                    export_min_x = parseInt(d3.select("text#n" + i).attr("x"));
                 }
-                if (parseInt(d3.select("text#n" + i).attr("y")) < min_y) {
-                    min_y = parseInt(d3.select("text#n" + i).attr("y"));
+                if (parseInt(d3.select("text#n" + i).attr("y")) < export_min_y) {
+                    export_min_y = parseInt(d3.select("text#n" + i).attr("y"));
                 }
             }
-            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - min_x + 2 * snap_size; });
-            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - min_x + 2 * snap_size; })
-                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - min_x + 2 * snap_size; });
-                        
-            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) - min_y + snap_size; });
-            svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) - min_y + snap_size; })
-                                 .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) - min_y + snap_size; });
+
+            // move all elements
+            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - export_min_x + 2 * snap_size; });
+            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - export_min_x + 2 * snap_size; })
+                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - export_min_x + 2 * snap_size; });
+
+            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) - export_min_y + snap_size; });
+            svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) - export_min_y + snap_size; })
+                                 .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) - export_min_y + snap_size; });
+
+            // save transform and remove it
+            export_transform = svg.attr("transform");
+            svg.attr("transform", null);
 
             // set svg size
             d3.select("svg").attr("width", d3.select("g").node().getBBox().width + snap_size)
                             .attr("height", d3.select("g").node().getBBox().height + snap_size);
-            
-            // save transform and remove it for export
-            var transform = svg.attr("transform");
-            svg.attr("transform", null);
+        }
 
+        function restoreAfterExport() {
+            // move elements back
+            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) + export_min_x - 2 * snap_size; });
+            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) + export_min_x - 2 * snap_size; })
+                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) + export_min_x - 2 * snap_size; });
+
+            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) + export_min_y - snap_size; });
+            svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) + export_min_y - snap_size; })
+                                 .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) + export_min_y - snap_size; });
+
+            // reapply transform
+            svg.attr("transform", export_transform);
+
+            // reset move values
+            export_min_x = Number.MAX_VALUE;
+            export_min_y = Number.MAX_VALUE;
+        }
+
+        function downloadSvg() {
+            prepareExport();
             const svgElement = document.getElementById('visualization');
-            var preface = '<?xml version="1.0" encoding="UTF-8"?>\r\n';
-            var svgBlob = new Blob([preface, svgElement.outerHTML], {type:"image/svg+xml;charset=utf-8"});
+            let preface = '<?xml version="1.0" encoding="UTF-8"?>\r\n';
+            let svgBlob = new Blob([preface, svgElement.outerHTML], {type:"image/svg+xml;charset=utf-8"});
     
-            var dataUrl = URL.createObjectURL(svgBlob);
+            let dataUrl = URL.createObjectURL(svgBlob);
             const link = document.createElement('a');
             link.href = dataUrl;
             link.download = 'export.svg';
             link.click();
-
-            // reapply transform
-            svg.attr("transform", transform);
+            restoreAfterExport();
         }
 
         function downloadPng() {
-            // move all elements to positive values
-            var min_x = 9000;
-            var min_y = 9000;
-            for (let i = 0;i < dataset.length;i++) {
-                if (parseInt(d3.select("text#n" + i).attr("x")) < min_x) {
-                    min_x = parseInt(d3.select("text#n" + i).attr("x"));
-                }
-                if (parseInt(d3.select("text#n" + i).attr("y")) < min_y) {
-                    min_y = parseInt(d3.select("text#n" + i).attr("y"));
-                }
-            }
-            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - min_x + 2 * snap_size; });
-            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - min_x + 2 * snap_size; })
-                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - min_x + 2 * snap_size; });
-                        
-            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) - min_y + snap_size; });
-            svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) - min_y + snap_size; })
-                                 .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) - min_y + snap_size; });
-
-            // set svg size
-            d3.select("svg").attr("width", null)
-                            .attr("height", null);
-
-            // save transform and remove it for export
-            var transform = svg.attr("transform");
-            svg.attr("transform", null);
-
+            prepareExport();
             const scaleFactor = 6;
             const svgElement = document.getElementById('visualization');
 
@@ -419,9 +420,7 @@
             link.href = dataUrl;
             link.download = 'export.png';
             link.click();
-
-            // reapply transform
-            svg.attr("transform", transform);
+            restoreAfterExport();
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
