@@ -66,7 +66,7 @@
         let dataset = input_text.split(" ");
 
         const line_draw_offset = 24 // draw the line above the text, should be >= font-size
-        const snap_size = 40
+        const snap_size = 80
 
         // initialize variables
         let selected = 0;
@@ -240,7 +240,7 @@
             .data(dataset)
             .enter()
             .append("text")
-            .attr("x", function (d, i) { return snap_size * 2 + i * snap_size * 4; })
+            .attr("x", function (d, i) { return snap_size + i * snap_size * 2; })
             .attr("y", snap_size)
             .attr("id", function (d, i) { return "n" + i; })
             .text(function (d, i) { return d; })
@@ -281,16 +281,16 @@
                         }
                     }
                     //console.log(j_split[0] + " is child " + this_child + "/" + nth_child);
-                    let movement = (snap_size * 4) * -(this_child + 1 - nth_child);
+                    let movement = (snap_size * 2) * -(this_child + 1 - nth_child);
 
                     // calculate movement of children for recursive movement (before moving the phrase)
                     let min_x = -(parseInt(d3.select("text#n" + j).attr("x")) - parseInt(d3.select("text#n" + parent_id).attr("x")) + movement);
-                    let move_y = parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2 - parseInt(d3.select("text#n" + j).attr("y"));
+                    let move_y = parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size - parseInt(d3.select("text#n" + j).attr("y"));
 
                     // move phrase
                     d3.select("text#n" + j)
                         .attr("x", parseInt(d3.select("text#n" + parent_id).attr("x")) - movement)
-                        .attr("y", parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size * 2);
+                        .attr("y", parseInt(d3.select("text#n" + parent_id).attr("y")) + snap_size);
 
                     // move connection line
                     svg.select("line#n" + j)
@@ -319,7 +319,7 @@
             }
             //console.log("min_x: " + initial_min_x);
 
-            let initial_move_x = initial_min_x - snap_size * 2;
+            let initial_move_x = initial_min_x - snap_size;
             svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - initial_move_x; });
             svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - initial_move_x; })
                                  .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - initial_move_x; });
@@ -341,11 +341,11 @@
             }
 
             // move all elements
-            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) - export_min_x + 2 * snap_size; });
-            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - export_min_x + 2 * snap_size; })
-                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - export_min_x + 2 * snap_size; });
+            svg.selectAll("text").attr("x",  function (d, i) { return parseInt(d3.select(this).attr("x"))  - export_min_x + snap_size; });
+            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) - export_min_x + snap_size; })
+                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) - export_min_x + snap_size; });
 
-            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) - export_min_y + snap_size; });
+            svg.selectAll("text").attr("y",  function (d, i) { return parseInt(d3.select(this).attr("y"))  - export_min_y + snap_size; });
             svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) - export_min_y + snap_size; })
                                  .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) - export_min_y + snap_size; });
 
@@ -356,11 +356,11 @@
 
         function restoreAfterExport() {
             // move elements back
-            svg.selectAll("text").attr("x", function (d, i) { return parseInt(d3.select(this).attr("x")) + export_min_x - 2 * snap_size; });
-            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) + export_min_x - 2 * snap_size; })
-                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) + export_min_x - 2 * snap_size; });
+            svg.selectAll("text").attr("x",  function (d, i) { return parseInt(d3.select(this).attr("x"))  + export_min_x - snap_size; });
+            svg.selectAll("line").attr("x1", function (d, i) { return parseInt(d3.select(this).attr("x1")) + export_min_x - snap_size; })
+                                 .attr("x2", function (d, i) { return parseInt(d3.select(this).attr("x2")) + export_min_x - snap_size; });
 
-            svg.selectAll("text").attr("y", function (d, i) { return parseInt(d3.select(this).attr("y")) + export_min_y - snap_size; });
+            svg.selectAll("text").attr("y",  function (d, i) { return parseInt(d3.select(this).attr("y"))  + export_min_y - snap_size; });
             svg.selectAll("line").attr("y1", function (d, i) { return parseInt(d3.select(this).attr("y1")) + export_min_y - snap_size; })
                                  .attr("y2", function (d, i) { return parseInt(d3.select(this).attr("y2")) + export_min_y - snap_size; });
 
