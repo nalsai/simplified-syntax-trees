@@ -6,16 +6,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <title>Simplified Syntax Trees</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <link rel="icon" type="image/svg" href="icon.svg">
+    <style>
+        main {
+            min-height: 85vh;
+        }
+
+        #icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: -.125em;
+        }
+    </style>
 </head>
 
 <body>
-    <div class="container my-5">
-        <h1>Simplified Syntax Trees</h1>
-        <a href="app.html" class="btn btn-primary my-3 ">Open Webapp</a>
-
+    <main class="container my-5">
+        <h1><img src="icon.svg" id="icon"/> Simplified Syntax Trees</h1>
+        <a href="app.html" class="btn btn-primary btn-l my-3 ">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tree" viewBox="0 0 16 16">
+                <path d="M8.416.223a.5.5 0 0 0-.832 0l-3 4.5A.5.5 0 0 0 5 5.5h.098L3.076 8.735A.5.5 0 0 0 3.5 9.5h.191l-1.638 3.276a.5.5 0 0 0 .447.724H7V16h2v-2.5h4.5a.5.5 0 0 0 .447-.724L12.31 9.5h.191a.5.5 0 0 0 .424-.765L10.902 5.5H11a.5.5 0 0 0 .416-.777l-3-4.5zM6.437 4.758A.5.5 0 0 0 6 4.5h-.066L8 1.401 10.066 4.5H10a.5.5 0 0 0-.424.765L11.598 8.5H11.5a.5.5 0 0 0-.447.724L12.69 12.5H3.309l1.638-3.276A.5.5 0 0 0 4.5 8.5h-.098l2.022-3.235a.5.5 0 0 0 .013-.507z"/>
+            </svg> Open Webapp</a>
+        <a href="https://github.com/nalsai/simplified-syntax-trees" target="_blank" class="btn btn-secondary my-3 mx-1">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+            </svg> Open source on GitHub</a>
+        <p>Input a sentence with each phrase (typically consisting of one word and potentially its grammar particle) separated by a space and click submit. Now you can move the phrases and connect
+            them by clicking on a phrase (it will turn red) and then clicking on the phrase you want to connect it to. </p>
+        <p>You can hold the alt key to also move all phrase connected to the phrase you are moving.</p>
+        <p>When you're done, you can export the tree as a PNG or SVG. The PNG will be a high resolution export with proper placement and a white background. The SVG has a transparent background. Alternatively, you can just save the link.</p>
+        <p>The input field changes to indicate which phrase a phrase is connected to (by adding a colon and the index of the phrase it is connected to, starting at 0). This means, that this tool will keep a
+            history of your changes and can try to rebuild the current tree if you reload the page. You can also change phrases
+            without any problems. However, if you want to remove or insert a phrase in front of an already connected phrase, the
+            connection numbers will be wrong and it therefore won't work. Using colons in the text will also confuse this tool, so replace them with something else.</p>
+        <p>If you want to help improve this tool or maybe add some tutorials, you can do so on <a href="https://github.com/nalsai/simplified-syntax-trees" target="_blank">GitHub</a>.</p>
         <p class="mt-5">Example:</p>
-        <iframe class="ratio ratio-16x9 border" style="min-height: 600px" src="app.html?i=%E5%B1%B1%E7%94%B0%E3%81%95%E3%82%93%E3%81%AF%3A5+%E4%BB%8A%E7%94%B0%E3%81%95%E3%82%93%E3%81%8C%3A3+%E4%B8%89%E5%B9%B4%E5%89%8D%E3%81%AB%3A3+%E3%82%84%E3%82%81%E3%81%9F%3A4+%E4%BC%9A%E7%A4%BE%E3%81%AB%3A5+%E3%81%A4%E3%81%A8%E3%82%81%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99"></iframe>
-    </div>
+        <iframe class="ratio ratio-16x9 border mb-4" style="min-height: 600px" src="app.html?i=%E5%B1%B1%E7%94%B0%E3%81%95%E3%82%93%E3%81%AF%3A5+%E4%BB%8A%E7%94%B0%E3%81%95%E3%82%93%E3%81%8C%3A3+%E4%B8%89%E5%B9%B4%E5%89%8D%E3%81%AB%3A3+%E3%82%84%E3%82%81%E3%81%9F%3A4+%E4%BC%9A%E7%A4%BE%E3%81%AB%3A5+%E3%81%A4%E3%81%A8%E3%82%81%E3%81%A6%E3%81%84%E3%81%BE%E3%81%99"></iframe>
+        <p>Sentence trees help visualize sentence structure to aid with understanding of long and complicated sentences with systematical grammar. They are basically a different, simplified version of the syntactic tree diagrams found in linguistic studies.</p>
+        <p>
+            In Japanese, the verb or copula (at the end of the sentence) is at the top right. You can then connect the phrases to it going from the right to the left.
+            Words in the RY <i>renyō</i> 連用 form connect to a <i>yōgen</i> 用言 (i.e. "adjective" or verb).
+            Words in the RT <i>rentai</i> 連体 form connect to a <i>taigen</i> 体言 (i.e. noun).
+            A phrase usually has all of the information it needs as children (sometimes things are only implied or connected as a parent – for example in attributive ("relative") clauses).
+            You can also consult an inflection dictionary to find out what connects to a specific verb based on the particles.
+        </p>
+        <p>You can practice how to connect the phrases at <a href="http://oaw-baumtester.ruhr-uni-bochum.de/">http://oaw-baumtester.ruhr-uni-bochum.de/</a>.</p>
+    </main>
+    <footer class="container my-5">
+        <hr>
+        Built by <a href="https://nalsai.de/">Nils Fürniß</a> | <a href="https://nalsai.de/impressum/">Impressum</a> | <a href="https://nalsai.de/datenschutz/">Datenschutz</a>
+    </footer>
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
     <script async src="https://umami.nils.moe/script.js" data-website-id="a434cd0c-3035-40cb-abf5-351e2f1b7fc4"></script>
 </body>
